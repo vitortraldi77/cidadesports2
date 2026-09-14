@@ -1,5 +1,5 @@
 import { PrismaClient } from '@/generated/prisma/client'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import { PrismaPg } from '@prisma/adapter-pg'
 
 /**
  * Client do Prisma como singleton.
@@ -8,14 +8,14 @@ import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
  * a instância no globalThis, cada recarga abriria uma nova conexão até estourar
  * o limite do banco.
  *
- * No Prisma 7 a conexão é feita por um driver adapter — trocar de SQLite para
- * Postgres significa trocar este adapter por PrismaPg e o provider no
- * schema.prisma, sem tocar em nenhuma query.
+ * Banco: Postgres (Neon, via Vercel Marketplace). `DATABASE_URL` deve ser a
+ * connection string com pooler (pgbouncer) — é a que o Vercel injeta e a que
+ * aguenta várias funções serverless abrindo conexão ao mesmo tempo.
  */
 
 const criarClient = () =>
   new PrismaClient({
-    adapter: new PrismaBetterSqlite3({ url: process.env.DATABASE_URL! }),
+    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
   })
 
 const globalForPrisma = globalThis as unknown as {

@@ -1,5 +1,7 @@
-// Banco: SQLite em desenvolvimento, PostgreSQL (Supabase) em produção.
-// Para manter o schema portável entre os dois, duas escolhas deliberadas:
+// Banco: PostgreSQL (Neon, via Vercel Marketplace) em produção e desenvolvimento.
+// O schema nasceu portável entre SQLite e Postgres (ver README, seção
+// "Migração para produção") e duas escolhas continuam deliberadas mesmo
+// depois da migração:
 //
 // 1. Datas e horas são STRINGS em formato fixo ("YYYY-MM-DD" e "HH:mm"), não
 //    DateTime. Uma reserva é um compromisso no calendário de parede da igreja,
@@ -9,9 +11,9 @@
 //    Bônus: nesse formato a ordenação lexicográfica é a ordenação cronológica,
 //    então comparações e a busca de sobreposição funcionam direto no SQL.
 //
-// 2. Enums viraram colunas de texto — o SQLite não suporta enum nativo. Os
-//    valores válidos vivem em src/lib/schemas.ts (Zod) e são a fonte de
-//    verdade. Na migração ao Postgres viram CHECK constraints.
+// 2. Enums continuam colunas de texto. Os valores válidos vivem em
+//    src/lib/schemas.ts (Zod) e são a fonte de verdade — convertê-los em CHECK
+//    constraints do Postgres é uma melhoria possível, não obrigatória.
 //
 // 3. Não há coluna "protocolo" separada: o próprio id autoincremental é o
 //    número que o solicitante informa ao Vitor, exibido como "CS-000123".
@@ -22,7 +24,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model Reserva {
