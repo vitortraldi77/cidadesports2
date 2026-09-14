@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+/*
+ * Paleta única e clara, agora derivada do design system do Cidade Sports
+ * (vermelho de marca + tinta preta + papel off-white). Não há modo escuro: o
+ * formulário é preenchido no celular, muitas vezes sob o sol na área
+ * esportiva, e um tema claro de alto contraste é o que se lê melhor nessa
+ * condição.
+ *
+ * O vermelho da marca é reservado para identidade e ações primárias — nunca
+ * para status "concluído com sucesso", que usa o verde semântico do próprio
+ * design system. Isso evita o problema clássico de marcas vermelhas: "aprovar"
+ * e "rejeitar" não podem ter a mesma cor.
+ */
+@theme {
+  /* Tinta e papel — neutros do sistema Cidade Sports (escala "ink"). */
+  --color-tinta: #0c0c0e;
+  --color-tinta-suave: #3d3d44;
+  --color-tinta-fraca: #9b9ba4;
+
+  --color-fundo: #f3f0ea;
+  --color-superficie: #ffffff;
+  --color-borda: #e6e6e9;
+  --color-borda-forte: #c7c7cf;
+
+  /* Marca — vermelho do selo (red-500/600 do design system). Identidade e
+     ações primárias, nunca semântica de status. */
+  --color-marca: #e2181d;
+  --color-marca-forte: #c10e13;
+  --color-marca-fraca: #fbe9e9;
+
+  /* Semânticos — independentes da marca, só para status e avisos. */
+  --color-sucesso: #1f9d55;
+  --color-sucesso-forte: #167a42;
+  --color-sucesso-fraca: #eaf7ef;
+
+  /* red-700 do sistema: mais escuro e fosco que a marca, para nunca ser
+     confundido com um botão de ação primária. */
+  --color-perigo: #960b0f;
+  --color-perigo-fraca: #f8ebea;
+
+  --color-alerta: #a5720a;
+  --color-alerta-fraca: #fbf3e0;
+
+  --color-info: #1f6be0;
+  --color-info-fraca: #eaf1fd;
+
+  /* Acentos por espaço — mesma lógica de "acento por família de esporte" do
+     design system: uma cor por espaço, usada só como tinta/borda/ponto,
+     nunca como cor de texto corrido. */
+  --color-quadra: #1f6be0;
+  --color-agua: #17bebb;
+  --color-campo: #b6e021;
+
+  --font-sans:
+    var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+
+  --ease-marca: cubic-bezier(0.2, 0.7, 0.25, 1);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-fundo);
+  color: var(--color-tinta);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Alvo de toque de 44px e sem zoom automático no iOS (que dispara com
+   font-size < 16px em campos de formulário). */
+@layer base {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+@layer components {
+  .campo {
+    @apply w-full rounded-[10px] border border-borda-forte bg-superficie px-3 py-2.5
+           text-tinta placeholder:text-tinta-fraca transition-colors duration-150
+           focus:border-marca focus:ring-[3px] focus:ring-marca/25 focus:outline-none
+           disabled:bg-fundo disabled:text-tinta-fraca;
+  }
+
+  .campo-invalido {
+    @apply border-perigo focus:border-perigo focus:ring-perigo/20;
+  }
+
+  .rotulo {
+    @apply mb-1.5 block text-sm font-medium text-tinta;
+  }
+
+  .ajuda {
+    @apply mt-1 text-sm text-tinta-suave;
+  }
+
+  .erro {
+    @apply mt-1.5 flex items-start gap-1.5 text-sm font-medium text-perigo;
+  }
+
+  /* Rótulo editorial em caixa alta — o "kicker" do design system do Cidade
+     Sports (11.5px, tracking largo), usado acima de todo título de página. */
+  .rotulo-kicker {
+    @apply text-[11.5px] font-bold tracking-[0.18em] text-marca uppercase;
+  }
+
+  /* Título em caixa alta, peso 800 e entrelinha apertada — a "display
+     condensada" do sistema. Reservado a h1/h2 de página; texto corrido nunca
+     usa caixa alta. */
+  .titulo-display {
+    @apply font-extrabold tracking-tight text-tinta uppercase;
+    line-height: 0.92;
+  }
+
+  /* O Tailwind 4 só aceita utilitários reais dentro de @apply — uma classe de
+     componente não pode aplicar outra. Por isso a base dos botões é um grupo
+     de seletores, e não um `@apply botao` dentro de cada variante. */
+  .botao,
+  .botao-primario,
+  .botao-secundario,
+  .botao-perigo {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 py-2.5
+           text-sm font-semibold transition-all duration-150 ease-out
+           focus-visible:outline-2 focus-visible:outline-offset-2
+           active:scale-[0.97]
+           disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100;
+  }
+
+  .botao-primario {
+    @apply bg-marca text-white hover:bg-marca-forte focus-visible:outline-marca;
+  }
+
+  .botao-secundario {
+    @apply border border-borda-forte bg-superficie text-tinta
+           hover:bg-fundo focus-visible:outline-tinta-suave;
+  }
+
+  .botao-perigo {
+    @apply border border-perigo/30 bg-perigo-fraca text-perigo
+           hover:bg-perigo hover:text-white focus-visible:outline-perigo;
+  }
+
+  .cartao {
+    @apply rounded-[10px] border border-borda bg-superficie shadow-sm;
+  }
+
+  .etiqueta {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1
+           text-xs font-semibold whitespace-nowrap;
+  }
+}

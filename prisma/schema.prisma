@@ -1,0 +1,115 @@
+// Banco: SQLite em desenvolvimento, PostgreSQL (Supabase) em produção.
+// Para manter o schema portável entre os dois, duas escolhas deliberadas:
+//
+// 1. Datas e horas são STRINGS em formato fixo ("YYYY-MM-DD" e "HH:mm"), não
+//    DateTime. Uma reserva é um compromisso no calendário de parede da igreja,
+//    não um instante absoluto no tempo — guardá-la como DateTime obriga a
+//    escolher um fuso e abre a porta para o clássico "a reserva do dia 10
+//    aparece como dia 9". Como string, o valor que entra é o valor que sai.
+//    Bônus: nesse formato a ordenação lexicográfica é a ordenação cronológica,
+//    então comparações e a busca de sobreposição funcionam direto no SQL.
+//
+// 2. Enums viraram colunas de texto — o SQLite não suporta enum nativo. Os
+//    valores válidos vivem em src/lib/schemas.ts (Zod) e são a fonte de
+//    verdade. Na migração ao Postgres viram CHECK constraints.
+//
+// 3. Não há coluna "protocolo" separada: o próprio id autoincremental é o
+//    número que o solicitante informa ao Vitor, exibido como "CS-000123".
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Reserva {
+  id Int @id @default(autoincrement())
+
+  // Dados do solicitante
+  nomeSolicitante String
+  dataNascimento  String // YYYY-MM-DD
+  telefone        String // só dígitos, com DDD
+  email           String
+
+  // Vínculo com a igreja
+  tipoVinculo     String
+  codigoMembresia String?
+
+  // Dados da reserva
+  espaco     String
+  data       String // YYYY-MM-DD
+  horaInicio String // HH:mm
+  horaFim    String // HH:mm
+  finalidade String
+
+  // Gestão
+  status          String  @default("PENDENTE")
+  observacaoAdmin String?
+
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+  logs         LogAcao[]
+
+  // Índice da checagem de conflito: mesmo espaço, mesma data, status que ocupa.
+  @@index([espaco, data, status])
+  // Índice do limite de 1 reserva por responsável por dia.
+  @@index([email, data, status])
+}
+
+// Agenda fixa: compromisso recorrente criado pelo Vitor direto no painel — um
+// treino toda terça, um culto toda sexta — sem passar pelo formulário público
+// nem pelo fluxo PENDENTE → APROVADO → CONFIRMADO, porque quem cria já é a
+// autoridade que decide.
+//
+// Não materializa uma linha por semana: é a regra em si (espaço, dia da
+// semana, horário, intervalo de vigência), e as ocorrências são calculadas na
+// hora — pelo calendário, para desenhar os blocos, e pela checagem de
+// conflito, para avisar quando um pedido público esbarra nela.
+model AgendaFixa {
+  id Int @id @default(autoincrement())
+
+  titulo      String
+  responsavel String
+
+  espaco     String
+  diaSemana  Int // 0 = domingo ... 6 = sábado
+  horaInicio String // HH:mm
+  horaFim    String // HH:mm
+
+  dataInicio String // YYYY-MM-DD, a partir de quando a regra vale
+  dataFim    String? // YYYY-MM-DD; null = sem data de término
+
+  // Desativar em vez de apagar preserva o registro de que a regra existiu —
+  // útil se um pedido antigo referenciar essa observação depois.
+  ativa Boolean @default(true)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  // Índice da checagem de conflito: mesmo espaço, mesmo dia da semana, só as ativas.
+  @@index([espaco, diaSemana, ativa])
+}
+
+model AdminUser {
+  id        Int      @id @default(autoincrement())
+  usuario   String   @unique
+  senhaHash String
+  criadoEm  DateTime @default(now())
+}
+
+// Trilha de auditoria: responde "quem mudou isso, quando e por quê" — a
+// primeira pergunta que aparece quando alguém reclama de uma reserva cancelada.
+model LogAcao {
+  id         Int      @id @default(autoincrement())
+  reservaId  Int
+  de         String?
+  para       String
+  observacao String?
+  criadoEm   DateTime @default(now())
+  reserva    Reserva  @relation(fields: [reservaId], references: [id], onDelete: Cascade)
+
+  @@index([reservaId])
+}
