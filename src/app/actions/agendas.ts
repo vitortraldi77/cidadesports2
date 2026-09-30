@@ -1,12 +1,14 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { exigirSessao } from '@/lib/auth'
 import { agendaFixaSchema } from '@/lib/schemas'
 import { STATUS_QUE_OCUPAM, protocolo } from '@/lib/dominio'
 import { diaDaSemana, formatarData, somaDias } from '@/lib/datas'
+import { sincronizarAgendaFixa } from '@/lib/agenda-google/sincronizar'
 
 export type EstadoAgendaFixa = {
   erros?: Record<string, string[]>
@@ -123,7 +125,7 @@ export async function criarAgendaFixa(
     }
   }
 
-  await prisma.agendaFixa.create({
+  const criada = await prisma.agendaFixa.create({
     data: {
       titulo: d.titulo,
       responsavel: d.responsavel,
@@ -134,7 +136,10 @@ export async function criarAgendaFixa(
       dataInicio: d.dataInicio,
       dataFim,
     },
+    select: { id: true },
   })
+
+  after(() => sincronizarAgendaFixa(criada.id))
 
   revalidatePath('/admin/agendas')
   revalidatePath('/admin/calendario')
@@ -155,6 +160,8 @@ export async function desativarAgendaFixa(formData: FormData): Promise<void> {
   if (!Number.isInteger(id) || id <= 0) return
 
   await prisma.agendaFixa.update({ where: { id }, data: { ativa: false } })
+  // Encerra a série no Google a partir de hoje, sem apagar o passado.
+  after(() => sincronizarAgendaFixa(id))
 
   revalidatePath('/admin/agendas')
   revalidatePath('/admin/calendario')

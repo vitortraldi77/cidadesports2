@@ -15,8 +15,8 @@ export default function PaginaPublica() {
           <p className="rotulo-kicker">Igreja da Cidade</p>
           <h1 className="titulo-display mt-1 text-2xl">Reserva de espaços · Cidade Sports</h1>
           <p className="mt-2 text-sm leading-relaxed text-tinta-suave">
-            Preencha o formulário para solicitar o uso da quadra society, da quadra de vôlei
-            de areia ou do campo de futebol.
+            Preencha o formulário para solicitar o uso de um dos espaços do Cidade Sports:
+            quadras, campo ou Espaço Ignição.
           </p>
         </div>
       </header>

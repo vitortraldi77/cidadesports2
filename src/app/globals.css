@@ -49,8 +49,10 @@
      design system: uma cor por espaço, usada só como tinta/borda/ponto,
      nunca como cor de texto corrido. */
   --color-quadra: #1f6be0;
+  --color-coberta: #7c4ddb;
   --color-agua: #17bebb;
   --color-campo: #b6e021;
+  --color-ignicao: #f2711c;
 
   --font-sans:
     var(--font-archivo), ui-sans-serif, system-ui, sans-serif;

@@ -47,3 +47,6 @@ next-env.d.ts
 /dev.db
 /dev.db-journal
 /src/generated/
+
+# credencial da service account do Google (sincronização com o Google Agenda)
+google-service-account*.json

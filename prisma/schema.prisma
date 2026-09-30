@@ -30,14 +30,19 @@ datasource db {
 model Reserva {
   id Int @id @default(autoincrement())
 
-  // Dados do solicitante
+  // Dados do solicitante.
+  //
+  // Opcionais no BANCO porque as reservas importadas do Google Agenda só
+  // trazem nome e, às vezes, telefone. Pelo formulário público continuam
+  // todos obrigatórios — essa exigência vive no Zod (src/lib/schemas.ts),
+  // que é por onde passa todo pedido novo.
   nomeSolicitante String
-  dataNascimento  String // YYYY-MM-DD
-  telefone        String // só dígitos, com DDD
-  email           String
+  dataNascimento  String? // YYYY-MM-DD
+  telefone        String? // só dígitos, com DDD
+  email           String?
 
   // Vínculo com a igreja
-  tipoVinculo     String
+  tipoVinculo     String?
   codigoMembresia String?
 
   // Dados da reserva
@@ -45,16 +50,31 @@ model Reserva {
   data       String // YYYY-MM-DD
   horaInicio String // HH:mm
   horaFim    String // HH:mm
-  finalidade String
+  finalidade String?
 
   // Gestão
   status          String  @default("PENDENTE")
   observacaoAdmin String?
 
+  // De onde a reserva veio: "FORMULARIO" (pedido público) ou "GOOGLE_AGENDA"
+  // (importada dos lançamentos feitos à mão antes do sistema existir).
+  origem String @default("FORMULARIO")
+
+  // Evento correspondente no Google Agenda (ver src/lib/agenda-google).
+  //
+  // Nulos enquanto a reserva não passou por um status que aparece na agenda.
+  // A agenda é guardada junto porque as importadas vêm de mais de uma. O id
+  // NÃO é único sozinho: um evento antigo como "Campeonato (Campo, Society e
+  // Quadra Coberta)" vira três reservas, uma por espaço — o trio abaixo é que
+  // é único, e é ele que impede importar o mesmo evento duas vezes.
+  googleCalendarId String?
+  googleEventId    String?
+
   criadoEm     DateTime  @default(now())
   atualizadoEm DateTime  @updatedAt
   logs         LogAcao[]
 
+  @@unique([googleCalendarId, googleEventId, espaco])
   // Índice da checagem de conflito: mesmo espaço, mesma data, status que ocupa.
   @@index([espaco, data, status])
   // Índice do limite de 1 reserva por responsável por dia.
@@ -88,9 +108,21 @@ model AgendaFixa {
   // útil se um pedido antigo referenciar essa observação depois.
   ativa Boolean @default(true)
 
+  // De onde veio: "PAINEL" (criada pelo Vitor) ou "GOOGLE_AGENDA" (importada
+  // de uma série que já existia na agenda).
+  origem String @default("PAINEL")
+
+  // Evento recorrente ("mestre" da série) no Google Agenda. Mesmo raciocínio
+  // da Reserva: uma série do Google pode virar várias agendas fixas — o
+  // Colégio Inspire é UMA série de segunda a sexta, e aqui cada agenda fixa
+  // tem um só dia da semana; a Escolinha ocupa três espaços.
+  googleCalendarId String?
+  googleEventId    String?
+
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
+  @@unique([googleCalendarId, googleEventId, espaco, diaSemana])
   // Índice da checagem de conflito: mesmo espaço, mesmo dia da semana, só as ativas.
   @@index([espaco, diaSemana, ativa])
 }

@@ -13,6 +13,8 @@
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
+    "agenda:sincronizar": "node --conditions=react-server --import tsx scripts/sincronizar-agenda.ts",
+    "agenda:importar": "node --import tsx scripts/importar-agenda-google.ts",
     "test": "node --import tsx --test tests/*.test.ts"
   },
   "dependencies": {

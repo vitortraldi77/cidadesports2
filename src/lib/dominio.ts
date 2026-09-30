@@ -7,8 +7,13 @@
 
 export const ESPACOS = {
   QUADRA_SOCIETY: 'Quadra Society',
+  QUADRA_COBERTA: 'Quadra Coberta',
   VOLEI_AREIA: 'Quadra de Vôlei de Areia',
   CAMPO_FUTEBOL: 'Campo de Futebol',
+  // Sala multiuso das lutas e aulas: jiu jitsu, capoeira, pilates, boxe e
+  // muay thai. O "tatame" que aparece em alguns eventos antigos da agenda
+  // fica dentro dele — não é um espaço à parte.
+  ESPACO_IGNICAO: 'Espaço Ignição',
 } as const
 
 export type Espaco = keyof typeof ESPACOS
@@ -43,6 +48,14 @@ export type Status = keyof typeof STATUS
  */
 export const STATUS_QUE_OCUPAM: Status[] = ['PENDENTE', 'APROVADO', 'CONFIRMADO']
 
+/**
+ * Status que aparecem no Google Agenda. Mais estreito que STATUS_QUE_OCUPAM de
+ * propósito: um pedido PENDENTE bloqueia o horário no sistema, mas ainda não
+ * foi aceito — mostrá-lo na agenda da igreja passaria a ideia de compromisso
+ * firmado. Sair desta lista (rejeitar, cancelar) remove o evento.
+ */
+export const STATUS_NA_AGENDA: Status[] = ['APROVADO', 'CONFIRMADO']
+
 /** Transições permitidas. Impede, por exemplo, confirmar um pedido rejeitado. */
 export const TRANSICOES: Record<Status, Status[]> = {
   PENDENTE: ['APROVADO', 'REJEITADO'],
@@ -74,8 +87,10 @@ export function protocolo(id: number): string {
 /** Nomes curtos, para caber nos blocos estreitos do calendário. */
 export const ESPACOS_CURTOS: Record<Espaco, string> = {
   QUADRA_SOCIETY: 'Society',
+  QUADRA_COBERTA: 'Coberta',
   VOLEI_AREIA: 'Vôlei',
   CAMPO_FUTEBOL: 'Campo',
+  ESPACO_IGNICAO: 'Ignição',
 }
 
 /**

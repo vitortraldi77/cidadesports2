@@ -15,7 +15,7 @@ const archivo = Archivo({
 export const metadata: Metadata = {
   title: 'Reserva de Espaços | Cidade Sports',
   description:
-    'Solicite a reserva das quadras e do campo do Cidade Sports — Igreja da Cidade.',
+    'Solicite a reserva das quadras, do campo e do Espaço Ignição do Cidade Sports — Igreja da Cidade.',
 }
 
 export const viewport: Viewport = {

@@ -17,21 +17,24 @@ import {
 import { formatarDataPorExtenso, formatarIntervalo, hoje, idade } from '@/lib/datas'
 import { linkWhatsApp } from '@/lib/whatsapp'
 
+// Os campos de contato são nulos nas reservas importadas do Google Agenda,
+// que só trazem o que estava escrito no título do evento.
 type Reserva = {
   id: number
   nomeSolicitante: string
-  dataNascimento: string
-  telefone: string
-  email: string
-  tipoVinculo: string
+  dataNascimento: string | null
+  telefone: string | null
+  email: string | null
+  tipoVinculo: string | null
   codigoMembresia: string | null
   espaco: string
   data: string
   horaInicio: string
   horaFim: string
-  finalidade: string
+  finalidade: string | null
   status: string
   observacaoAdmin: string | null
+  origem: string
   criadoEm: Date
 }
 
@@ -110,8 +113,11 @@ export function CartaoReserva({
   const status = r.status as Status
   const disponiveis = ACOES_POR_STATUS[status] ?? []
   const espaco = ESPACOS[r.espaco as Espaco] ?? r.espaco
-  const vinculo = TIPOS_VINCULO[r.tipoVinculo as TipoVinculo] ?? r.tipoVinculo
+  const vinculo = r.tipoVinculo
+    ? (TIPOS_VINCULO[r.tipoVinculo as TipoVinculo] ?? r.tipoVinculo)
+    : null
   const ehPassada = r.data < hoje()
+  const importada = r.origem === 'GOOGLE_AGENDA'
 
   return (
     <article className={`cartao overflow-hidden ${ehPassada ? 'opacity-70' : ''}`}>
@@ -126,6 +132,11 @@ export function CartaoReserva({
                 data passada
               </span>
             )}
+            {importada && (
+              <span className="etiqueta bg-fundo text-tinta-suave ring-1 ring-borda-forte">
+                importada da agenda
+              </span>
+            )}
           </div>
 
           <h3 className="mt-2 font-semibold text-tinta">{espaco}</h3>
@@ -133,7 +144,13 @@ export function CartaoReserva({
             {formatarDataPorExtenso(r.data)} · {formatarIntervalo(r.horaInicio, r.horaFim)}
           </p>
           <p className="mt-1 truncate text-sm text-tinta">
-            {r.nomeSolicitante} <span className="text-tinta-fraca">·</span> {vinculo}
+            {r.nomeSolicitante}
+            {vinculo && (
+              <>
+                {' '}
+                <span className="text-tinta-fraca">·</span> {vinculo}
+              </>
+            )}
           </p>
 
           {conflito && (
@@ -169,19 +186,25 @@ export function CartaoReserva({
         <div className="border-t border-borda bg-fundo px-4 py-4">
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
             <Item termo="Nome completo" valor={r.nomeSolicitante} />
-            <Item
-              termo="Data de nascimento"
-              valor={`${r.dataNascimento.split('-').reverse().join('/')} (${idade(r.dataNascimento)} anos)`}
-            />
-            <Item termo="Telefone / WhatsApp" valor={formatarTelefone(r.telefone)} />
-            <Item termo="E-mail" valor={r.email} />
-            <Item termo="Vínculo" valor={vinculo} />
+            {r.dataNascimento && (
+              <Item
+                termo="Data de nascimento"
+                valor={`${r.dataNascimento.split('-').reverse().join('/')} (${idade(r.dataNascimento)} anos)`}
+              />
+            )}
+            {r.telefone && (
+              <Item termo="Telefone / WhatsApp" valor={formatarTelefone(r.telefone)} />
+            )}
+            {r.email && <Item termo="E-mail" valor={r.email} />}
+            {vinculo && <Item termo="Vínculo" valor={vinculo} />}
             {r.codigoMembresia && <Item termo="Código de membresia" valor={r.codigoMembresia} />}
-            <div className="sm:col-span-2">
-              <Item termo="Finalidade" valor={r.finalidade} />
-            </div>
+            {r.finalidade && (
+              <div className="sm:col-span-2">
+                <Item termo="Finalidade" valor={r.finalidade} />
+              </div>
+            )}
             <Item
-              termo="Pedido enviado em"
+              termo={importada ? 'Importada em' : 'Pedido enviado em'}
               valor={new Intl.DateTimeFormat('pt-BR', {
                 dateStyle: 'short',
                 timeStyle: 'short',
@@ -277,9 +300,11 @@ export function CartaoReserva({
             })}
 
             {/* O contato é por WhatsApp, fora do sistema: este link abre a
-                conversa com a mensagem já escrita, pronta para revisar. */}
+                conversa com a mensagem já escrita, pronta para revisar.
+                Reservas importadas sem telefone no título não têm o botão. */}
+            {r.telefone && (
             <a
-              href={linkWhatsApp(r, status)}
+              href={linkWhatsApp({ ...r, telefone: r.telefone }, status)}
               target="_blank"
               rel="noopener noreferrer"
               className="botao-secundario ml-auto"
@@ -289,6 +314,7 @@ export function CartaoReserva({
               </svg>
               WhatsApp
             </a>
+            )}
           </div>
         )}
       </form>

@@ -1,11 +1,13 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { autenticar, criarSessao, encerrarSessao, exigirSessao } from '@/lib/auth'
 import { loginSchema } from '@/lib/schemas'
 import { podeTransicionar, type Status } from '@/lib/dominio'
+import { sincronizarReserva } from '@/lib/agenda-google/sincronizar'
 
 export type EstadoLogin = { mensagem?: string }
 
@@ -92,6 +94,10 @@ export async function mudarStatus(
   } catch (e) {
     return { erro: e instanceof Error ? e.message : 'Falha ao atualizar a reserva.' }
   }
+
+  // Depois da resposta: o painel não espera o Google, e uma falha lá não
+  // desfaz a mudança de status, que já está gravada.
+  after(() => sincronizarReserva(id))
 
   revalidatePath('/admin')
   return { sucesso: 'Reserva atualizada.' }

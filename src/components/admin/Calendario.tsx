@@ -25,7 +25,7 @@ type Reserva = {
   horaInicio: string
   horaFim: string
   status: string
-  finalidade: string
+  finalidade: string | null
 }
 
 type Props = {
@@ -54,8 +54,10 @@ const ALTURA_HORA = 56
  */
 const CORES: Record<Espaco, { bloco: string; ponto: string }> = {
   QUADRA_SOCIETY: { bloco: 'bg-quadra/10 border-quadra text-tinta', ponto: 'bg-quadra' },
+  QUADRA_COBERTA: { bloco: 'bg-coberta/10 border-coberta text-tinta', ponto: 'bg-coberta' },
   VOLEI_AREIA: { bloco: 'bg-agua/10 border-agua text-tinta', ponto: 'bg-agua' },
   CAMPO_FUTEBOL: { bloco: 'bg-campo/15 border-campo text-tinta', ponto: 'bg-campo' },
+  ESPACO_IGNICAO: { bloco: 'bg-ignicao/10 border-ignicao text-tinta', ponto: 'bg-ignicao' },
 }
 
 const LIBERADA = 'bg-fundo border-borda-forte text-tinta-suave'
@@ -257,11 +259,11 @@ export function Calendario({
                           ehFixa
                             ? `Agenda fixa · ${ESPACOS[r.espaco as Espaco] ?? r.espaco}\n` +
                               `${formatarDataPorExtenso(r.data)}, ${r.horaInicio} às ${r.horaFim}\n` +
-                              `${r.nomeSolicitante}\n\n${r.finalidade}`
+                              `${r.nomeSolicitante}${r.finalidade ? `\n\n${r.finalidade}` : ''}`
                             : `${protocolo(r.id)} · ${ESPACOS[r.espaco as Espaco] ?? r.espaco}\n` +
                               `${formatarDataPorExtenso(r.data)}, ${r.horaInicio} às ${r.horaFim}\n` +
                               `${r.nomeSolicitante}\n` +
-                              `${STATUS[status]}\n\n${r.finalidade}`
+                              `${STATUS[status]}${r.finalidade ? `\n\n${r.finalidade}` : ''}`
                         }
                         className={`absolute overflow-hidden rounded border-l-3 px-1.5 py-1 text-left transition hover:z-10 hover:shadow-md ${cor} ${
                           liberada ? 'opacity-70' : ''
